@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ ip }}</title>
+</head>
+<body>
+    Your IP: {{ ip }}
+    <br>
+    Was here before: {{ was_here }}
+    <br>
+    Proxy: {{ proxy }}
+    <br>
+    VPN: {{ VPN }}
+    <br>
+    TOR: {{ TOR }}
+    <br>
+    Proxy Headers: {{ proxy_headers }}
+    {% if proxy_headers %}
+        <br>
+        List of Headers:
+        {% for header in proxy_headers_list %}
+            <li>{{ header }}</li>
+        {% endfor %}
+    {% endif %}
+</body>
+</html>
