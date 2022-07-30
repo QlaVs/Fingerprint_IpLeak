@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from ipware import get_client_ip
 import requests
+from requests_html import HTMLSession
+import re
 
 proxy_headers = ['CLIENT_IP', 'FORWARDED', 'FORWARDED_FOR',
                  'FORWARDED_FOR_IP', 'VIA', 'X_FORWARDED',
@@ -34,10 +36,17 @@ def index(request):
         context["proxy"] = False
 
     # Check for VPN
-    response = requests.get(f'https://ipqualityscore.com/api/json/ip/iWY48acUFG4aIun9wpZkIv8WpEeTycbp/{ip}')
-    status = response.json()["active_vpn"]
-    print(status)
-    context["VPN"] = status
+    # response = requests.get(f'https://ipqualityscore.com/api/json/ip/iWY48acUFG4aIun9wpZkIv8WpEeTycbp/{ip}')
+    # status = response.json()["vpn"]
+    # print(status)
+
+    session = HTMLSession()
+    r = session.get(f'https://qlavs.github.io/ipredir/?addr={ip}')
+    r.html.render(sleep=1.2)
+    data = r.html.html
+    print(data)
+    status = re.search('"vpn":(.*),"tor', data)
+    context["VPN"] = status.group(1)
 
     # Check for TOR
     # raw_data = requests.get('https://check.torproject.org/exit-addresses')
