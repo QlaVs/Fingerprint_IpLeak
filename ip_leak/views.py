@@ -51,11 +51,13 @@ def index(request):
     # Check for TOR
     # raw_data = requests.get('https://check.torproject.org/exit-addresses')
     # data = list(raw_data.text.splitlines())
-    with open("tor_ips.txt") as file:
-        ips = file.readlines()
+    with open("tor_ips.txt", 'r') as file:
+        ips = file.read().splitlines()
+        print(ips)
         for tor_ip in ips:
             if ip == tor_ip:
                 context["TOR"] = True
+                break
             else:
                 context["TOR"] = False
 
