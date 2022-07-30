@@ -34,7 +34,10 @@ def index(request):
         context["proxy"] = False
 
     # Check for VPN
-    context["VPN"] = False
+    response = requests.get(f'https://ipqualityscore.com/api/json/ip/iWY48acUFG4aIun9wpZkIv8WpEeTycbp/{ip}')
+    status = response.json()["active_vpn"]
+    print(status)
+    context["VPN"] = status
 
     # Check for TOR
     # raw_data = requests.get('https://check.torproject.org/exit-addresses')
