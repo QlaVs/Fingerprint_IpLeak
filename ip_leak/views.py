@@ -37,11 +37,11 @@ def index(request):
     context["VPN"] = False
 
     # Check for TOR
-    raw_data = requests.get('https://check.torproject.org/exit-addresses')
-    data = list(raw_data.text.splitlines())
-    for tor_ip in data:
-        if "ExitAddress" in tor_ip:
-            tor_ip = tor_ip.split(" ")[1]
+    # raw_data = requests.get('https://check.torproject.org/exit-addresses')
+    # data = list(raw_data.text.splitlines())
+    with open("tor_ips.txt") as file:
+        ips = file.readlines()
+        for tor_ip in ips:
             if ip == tor_ip:
                 context["TOR"] = True
             else:
