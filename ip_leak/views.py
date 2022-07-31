@@ -4,6 +4,7 @@ import pyppeteer
 from django.shortcuts import render
 from ipware import get_client_ip
 import requests
+from chromedriver_py import binary_path
 from requests_html import AsyncHTMLSession, HTMLSession
 import re
 
@@ -22,7 +23,7 @@ async def get_vpn(ip):
         'handleSIGINT': False,
         'handleSIGTERM': False,
         'handleSIGHUP': False
-    })
+    }, executablePath=binary_path)
     session._browser = browser
     r = await session.get(f'https://qlavs.github.io/ipredir/?addr={ip}')
     await r.html.arender(sleep=2)
