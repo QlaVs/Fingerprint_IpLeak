@@ -1,7 +1,10 @@
+import asyncio
+
+import pyppeteer
 from django.shortcuts import render
 from ipware import get_client_ip
 import requests
-from requests_html import HTMLSession
+from requests_html import AsyncHTMLSession, HTMLSession
 import re
 
 proxy_headers = ['CLIENT_IP', 'FORWARDED', 'FORWARDED_FOR',
@@ -11,17 +14,38 @@ proxy_headers = ['CLIENT_IP', 'FORWARDED', 'FORWARDED_FOR',
                  'HTTP_VIA', 'HTTP_X_FORWARDED', 'HTTP_X_FORWARDED_FOR']
 
 
+async def get_vpn(ip):
+    session = AsyncHTMLSession()
+    browser = await pyppeteer.launch({
+        'ignoreHTTPSErrors': True,
+        'headless': True,
+        'handleSIGINT': False,
+        'handleSIGTERM': False,
+        'handleSIGHUP': False
+    })
+    session._browser = browser
+    r = await session.get(f'https://qlavs.github.io/ipredir/?addr={ip}')
+    await r.html.arender(sleep=2)
+    data = r.html.html
+    print(data)
+    try:
+        status = re.search('"vpn":(.*),"tor', data)
+        return status.group(1).capitalize()
+    except:
+        return False
+
+
 # Create your views here.
 def index(request):
     template = "index.html"
     context = {}
     proxy_headers_list = []
 
-    # Get IP
+    # - Get IP -
     ip, is_routable = get_client_ip(request)
     context["ip"] = ip
 
-    # Check proxy and headers
+    # - Check proxy and headers -
     all_headers = dict(request.headers)
     for pr_header in proxy_headers:
         if pr_header in all_headers:
@@ -35,25 +59,25 @@ def index(request):
         context["proxy_headers"] = False
         context["proxy"] = False
 
-    # Check for VPN
+    # - Check for VPN -
     # response = requests.get(f'https://ipqualityscore.com/api/json/ip/iWY48acUFG4aIun9wpZkIv8WpEeTycbp/{ip}')
     # status = response.json()["vpn"]
     # print(status)
+    # loop = asyncio.get_event_loop()
+    # loop.run_until_complete(asyncio.gather(*task))
+    # loop.close()
 
-    session = HTMLSession()
-    r = session.get(f'https://qlavs.github.io/ipredir/?addr={ip}')
-    r.html.render(sleep=1.2)
-    data = r.html.html
-    print(data)
-    status = re.search('"vpn":(.*),"tor', data)
-    context["VPN"] = status.group(1)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    result = loop.run_until_complete(get_vpn(ip))
+    print(result)
+    context["VPN"] = result
 
-    # Check for TOR
+    # - Check for TOR -
     # raw_data = requests.get('https://check.torproject.org/exit-addresses')
     # data = list(raw_data.text.splitlines())
     with open("tor_ips.txt", 'r') as file:
         ips = file.read().splitlines()
-        print(ips)
         for tor_ip in ips:
             if ip == tor_ip:
                 context["TOR"] = True
@@ -61,7 +85,9 @@ def index(request):
             else:
                 context["TOR"] = False
 
-    # Check for being on cite before
+    # - Check for being on cite before -
     context["was_here"] = True
 
     return render(request, template, context)
+
+
