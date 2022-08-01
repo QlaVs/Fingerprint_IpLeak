@@ -29,8 +29,12 @@ async def get_vpn(ip):
     print(data)
     try:
         status = re.search('"vpn":(.*),"tor', data)
+        await browser.close()
+        await session.close()
         return status.group(1).capitalize()
     except:
+        await browser.close()
+        await session.close()
         return False
 
 
