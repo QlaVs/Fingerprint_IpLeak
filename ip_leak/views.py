@@ -78,7 +78,9 @@ def index(request):
     # - Check for TOR -
     # raw_data = requests.get('https://check.torproject.org/exit-addresses')
     # data = list(raw_data.text.splitlines())
-    with open("tor_ips.txt", 'r') as file:
+
+    with open('/home/QLVZ/Fingerprint_IpLeak/Fingerprint/tor_ips.txt', 'r') as file:
+    # with open("tor_ips.txt", 'r') as file:
         ips = file.read().splitlines()
         for tor_ip in ips:
             if ip == tor_ip:
