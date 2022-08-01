@@ -1,6 +1,5 @@
 import asyncio
 import pyppeteer
-from django.http import HttpResponse
 from django.shortcuts import render
 from ipware import get_client_ip
 from requests_html import AsyncHTMLSession
@@ -79,7 +78,7 @@ def index(request):
     # raw_data = requests.get('https://check.torproject.org/exit-addresses')
     # data = list(raw_data.text.splitlines())
 
-    with open('/home/QLVZ/Fingerprint_IpLeak/Fingerprint/tor_ips.txt', 'r') as file:
+    with open('/home/QLVZ/Fingerprint_IpLeak/tor_ips.txt', 'r') as file:
     # with open("tor_ips.txt", 'r') as file:
         ips = file.read().splitlines()
         for tor_ip in ips:
