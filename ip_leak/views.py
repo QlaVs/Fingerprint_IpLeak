@@ -1,11 +1,9 @@
 import asyncio
-
 import pyppeteer
+from django.http import HttpResponse
 from django.shortcuts import render
 from ipware import get_client_ip
-import requests
-from chromedriver_py import binary_path
-from requests_html import AsyncHTMLSession, HTMLSession
+from requests_html import AsyncHTMLSession
 import re
 
 proxy_headers = ['CLIENT_IP', 'FORWARDED', 'FORWARDED_FOR',
@@ -23,7 +21,7 @@ async def get_vpn(ip):
         'handleSIGINT': False,
         'handleSIGTERM': False,
         'handleSIGHUP': False
-    }, executablePath=binary_path)
+    }, args=['--no-sandbox'])
     session._browser = browser
     r = await session.get(f'https://qlavs.github.io/ipredir/?addr={ip}')
     await r.html.arender(sleep=2)
@@ -71,7 +69,6 @@ def index(request):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     result = loop.run_until_complete(get_vpn(ip))
-    print(result)
     context["VPN"] = result
 
     # - Check for TOR -
@@ -87,8 +84,15 @@ def index(request):
                 context["TOR"] = False
 
     # - Check for being on cite before -
-    context["was_here"] = True
-
-    return render(request, template, context)
+    cookie = request.COOKIES.get('was_here_before')
+    if cookie is not None:
+        context["was_here"] = cookie
+        return render(request, template, context)
+    else:
+        print('First time on page')
+        context["was_here"] = False
+        response = render(request, template, context)
+        response.set_cookie('was_here_before', True, max_age=365*24*60*60)
+        return response
 
 
