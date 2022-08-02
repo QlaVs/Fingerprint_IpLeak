@@ -126,7 +126,7 @@ def index(request):
         context["was_here"] = "True"
         return render(request, template, context)
 
-    elif not cookie or not user:
+    elif (not cookie and user) or (cookie and not user):
         # print('First time on page')
         context["was_here"] = "Traces found"
         return render(request, template, context)
@@ -138,5 +138,7 @@ def index(request):
         return response
 
     elif cookie is None and not user:
+        response = render(request, template, context)
+        response.set_cookie('was_here_before', True, max_age=365 * 24 * 60 * 60)
         context["was_here"] = "False"
         return render(request, template, context)

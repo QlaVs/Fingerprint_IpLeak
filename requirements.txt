@@ -1,7 +1,6 @@
 Django~=4.0.6
 pyppeteer~=1.0.2
 requests~=2.27.1
-chromedriver-py ~= 104.0.5112.29
 python-decouple~=3.6
 django-user-agents~=0.4.0
 PyYAML~=6.0
