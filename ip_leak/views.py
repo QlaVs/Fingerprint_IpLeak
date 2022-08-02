@@ -4,6 +4,7 @@ from django.shortcuts import render
 from ipware import get_client_ip
 from requests_html import AsyncHTMLSession
 import re
+from .models import UserData
 
 proxy_headers = ['CLIENT_IP', 'FORWARDED', 'FORWARDED_FOR',
                  'FORWARDED_FOR_IP', 'VIA', 'X_FORWARDED',
@@ -25,7 +26,7 @@ async def get_vpn(ip):
     r = await session.get(f'https://qlavs.github.io/ipredir/?addr={ip}')
     await r.html.arender(sleep=2)
     data = r.html.html
-    print(data)
+    # print(data)
     try:
         status = re.search('"vpn":(.*),"tor', data)
         await browser.close()
@@ -42,12 +43,13 @@ def index(request):
     template = "index.html"
     context = {}
     proxy_headers_list = []
+    md = {}
 
-    # - Get IP -
+    # --- Get IP ---
     ip, is_routable = get_client_ip(request)
     context["ip"] = ip
 
-    # - Check proxy and headers -
+    # --- Check proxy and headers ---
     all_headers = dict(request.headers)
     for pr_header in proxy_headers:
         if pr_header in all_headers:
@@ -61,25 +63,24 @@ def index(request):
         context["proxy_headers"] = False
         context["proxy"] = False
 
-    # - Check for VPN -
+    # --- Check for VPN ---
+
     # response = requests.get(f'https://ipqualityscore.com/api/json/ip/iWY48acUFG4aIun9wpZkIv8WpEeTycbp/{ip}')
     # status = response.json()["vpn"]
     # print(status)
-    # loop = asyncio.get_event_loop()
-    # loop.run_until_complete(asyncio.gather(*task))
-    # loop.close()
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     result = loop.run_until_complete(get_vpn(ip))
     context["VPN"] = result
 
-    # - Check for TOR -
+    # --- Check for TOR ---
+
     # raw_data = requests.get('https://check.torproject.org/exit-addresses')
     # data = list(raw_data.text.splitlines())
 
-    with open('/home/QLVZ/Fingerprint_IpLeak/tor_ips.txt', 'r') as file:
-    # with open("tor_ips.txt", 'r') as file:
+    # with open('/home/QLVZ/Fingerprint_IpLeak/tor_ips.txt', 'r') as file:
+    with open("tor_ips.txt", 'r') as file:
         ips = file.read().splitlines()
         for tor_ip in ips:
             if ip == tor_ip:
@@ -88,16 +89,54 @@ def index(request):
             else:
                 context["TOR"] = False
 
-    # - Check for being on cite before -
-    cookie = request.COOKIES.get('was_here_before')
-    if cookie is not None:
-        context["was_here"] = cookie
-        return render(request, template, context)
+    # --- Check for being on cite before ---
+    # MetaData check
+    md["browser"] = f"{request.user_agent.browser.family} {request.user_agent.browser.version_string}"
+    md["device"] = request.user_agent.device.family
+    md["os"] = f"{request.user_agent.os.family} {request.user_agent.os.version_string}"
+    if request.user_agent.is_pc:
+        md["platform"] = "PC"
+    elif request.user_agent.is_mobile:
+        md["platform"] = "Mobile"
     else:
-        print('First time on page')
-        context["was_here"] = False
+        md["platform"] = "Other"
+
+    try:
+        UserData.objects.get(ip=ip)
+        UserData.objects.get_or_create(ip=ip,
+                                       browser=md["browser"],
+                                       device=md["device"],
+                                       os=md["os"],
+                                       platform=md["platform"])
+        user = True
+    except:
+        UserData.objects.create(ip=ip,
+                                browser=md["browser"],
+                                device=md["device"],
+                                os=md["os"],
+                                platform=md["platform"])
+        user = False
+    print(md)
+
+    # Cookie check
+    cookie = request.COOKIES.get('was_here_before')
+
+    # Overall
+    if cookie and user:
+        context["was_here"] = "True"
+        return render(request, template, context)
+
+    elif not cookie or not user:
+        # print('First time on page')
+        context["was_here"] = "Traces found"
+        return render(request, template, context)
+
+    elif cookie is None and user:
+        context["was_here"] = "Traces found"
         response = render(request, template, context)
-        response.set_cookie('was_here_before', True, max_age=365*24*60*60)
+        response.set_cookie('was_here_before', True, max_age=365 * 24 * 60 * 60)
         return response
 
-
+    elif cookie is None and not user:
+        context["was_here"] = "False"
+        return render(request, template, context)

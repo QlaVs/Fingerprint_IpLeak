@@ -27,8 +27,12 @@
                         <span class="badge badge-pill badge-success">
                             {{ was_here }}
                         </span>
-                        {% else %}
-                        <span class="badge badge-pill badge-danger">
+                        {% elif was_here == "Traces found" %}
+                        <span class="badge badge-pill badge-warning">
+                            {{ was_here }}
+                        </span>
+                        {% elif was_here == "False" %}
+                         <span class="badge badge-pill badge-danger">
                             {{ was_here }}
                         </span>
                         {% endif %}
