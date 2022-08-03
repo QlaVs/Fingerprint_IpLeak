@@ -33,11 +33,12 @@ ___
 ___
 ### VPN
 Определяется с помощью данных с сервиса [IpQualityScore](https://www.ipqualityscore.com/).  
-```!ВАЖНО!``` Так как приложение размещено на сервисе PythnoAnywhere.com и используется бесплатный тарифный план хостинга, то имеются ограничения:
-через ```request.get()``` можно отправлять запросы только на сайты из списка 
-[Whitelist](https://www.pythonanywhere.com/whitelist/). В списке есть github, поэтому мною был создан способ переадресации API с сервиса IQS на небольшой
-[ByPass](https://github.com/QlaVs/QlaVs.github.io/tree/master/ipredir), рамещенный на Github Pages
-(Данное решение также может быть использовано для других API при необходимости).
+```!ВАЖНО!``` Так как приложение размещено на сервисе [PythonAnywhere](www.pythonanywhere.com) и используется бесплатный тарифный план хостинга,
+то имеются ограничения: через ```request.get()``` можно отправлять запросы только на сайты из списка 
+[Whitelist](https://www.pythonanywhere.com/whitelist/).  
+В списке есть GitHub, поэтому я создал страницу для переадресации API с сервиса IQS на небольшой
+[ByPass](https://github.com/QlaVs/QlaVs.github.io/tree/master/ipredir), рамещенный на Github Pages.  
+Данное решение также может быть использовано для других API (при необходимости).
 ___
 ### TOR
 Определяется через готовый список известных [Exit-адресов сервиса TOR](https://check.torproject.org/exit-addresses). В моем случае список хранится в файле из-за
