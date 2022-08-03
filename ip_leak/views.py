@@ -1,9 +1,13 @@
 import asyncio
+import pytz
+import re
+from datetime import datetime
+
 import pyppeteer
 from django.shortcuts import render
 from ipware import get_client_ip
 from requests_html import AsyncHTMLSession
-import re
+
 from .models import UserData
 
 proxy_headers = ['CLIENT_IP', 'FORWARDED', 'FORWARDED_FOR',
@@ -13,7 +17,7 @@ proxy_headers = ['CLIENT_IP', 'FORWARDED', 'FORWARDED_FOR',
                  'HTTP_VIA', 'HTTP_X_FORWARDED', 'HTTP_X_FORWARDED_FOR']
 
 
-async def get_vpn(ip):
+async def get_vpn_and_timezone(ip):
     session = AsyncHTMLSession()
     browser = await pyppeteer.launch({
         'ignoreHTTPSErrors': True,
@@ -24,18 +28,19 @@ async def get_vpn(ip):
     }, args=['--no-sandbox'])
     session._browser = browser
     r = await session.get(f'https://qlavs.github.io/ipredir/?addr={ip}')
-    await r.html.arender(sleep=2)
+    await r.html.arender(sleep=2, timeout=20)
     data = r.html.html
     # print(data)
     try:
-        status = re.search('"vpn":(.*),"tor', data)
+        vpn = re.search('"vpn":(.*),"tor', data)
+        timezone = re.search('"timezone":"(.*)","mobile', data)
         await browser.close()
         await session.close()
-        return status.group(1).capitalize()
+        return vpn.group(1).capitalize(), timezone.group(1)
     except:
         await browser.close()
         await session.close()
-        return False
+        return False, "N/A"
 
 
 # Create your views here.
@@ -64,7 +69,7 @@ def index(request):
         context["proxy_headers"] = False
         context["proxy"] = False
 
-    # --- Check for VPN ---
+    # --- Check for VPN and timezone---
 
     # response = requests.get(f'https://ipqualityscore.com/api/json/ip/iWY48acUFG4aIun9wpZkIv8WpEeTycbp/{ip}')
     # status = response.json()["vpn"]
@@ -72,8 +77,15 @@ def index(request):
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    result = loop.run_until_complete(get_vpn(ip))
-    context["VPN"] = result
+    result = loop.run_until_complete(get_vpn_and_timezone(ip))
+    context["VPN"] = result[0]
+
+    time = result[1].replace("\\", "")
+    if time != "N/A":
+        tz = pytz.timezone(time)
+        context["ip_time"] = datetime.now(tz).strftime("%H:%M")
+    else:
+        context["ip_time"] = "N/A"
 
     # --- Check for TOR ---
 
