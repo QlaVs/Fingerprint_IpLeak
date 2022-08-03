@@ -34,7 +34,7 @@ ___
 ### VPN
 Определяется с помощью данных с сервиса [IpQualityScore](https://www.ipqualityscore.com/).  
 ```!ВАЖНО!``` Так как приложение размещено на сервисе [PythonAnywhere](www.pythonanywhere.com) и используется бесплатный тарифный план хостинга,
-то имеются ограничения: через ```request.get()``` можно отправлять запросы только на сайты из списка 
+то имеются ограничения: через ```requests.get()``` можно отправлять запросы только на сайты из списка 
 [Whitelist](https://www.pythonanywhere.com/whitelist/).  
 В списке есть GitHub, поэтому я создал страницу для переадресации API с сервиса IQS на небольшой
 [ByPass](https://github.com/QlaVs/QlaVs.github.io/tree/master/ipredir), рамещенный на Github Pages.  
