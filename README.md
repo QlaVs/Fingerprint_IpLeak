@@ -56,6 +56,7 @@ ___
 - Pyppeteer
 - Request-html
 - Pytz
+- Chromium
 - HTML
 - JavaScript
 - Bootstrap
