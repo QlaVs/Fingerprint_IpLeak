@@ -44,6 +44,7 @@ def index(request):
     context = {}
     proxy_headers_list = []
     md = {}
+    temp = None
 
     # --- Get IP ---
     ip, is_routable = get_client_ip(request)
@@ -90,7 +91,7 @@ def index(request):
                 context["TOR"] = False
 
     # --- Check for being on cite before ---
-    # MetaData check
+    # MetaData gathering
     md["browser"] = f"{request.user_agent.browser.family} {request.user_agent.browser.version_string}"
     md["device"] = request.user_agent.device.family
     md["os"] = f"{request.user_agent.os.family} {request.user_agent.os.version_string}"
@@ -101,22 +102,23 @@ def index(request):
     else:
         md["platform"] = "Other"
 
-    try:
-        UserData.objects.get(ip=ip)
+    # DB check
+    if UserData.objects.filter(ip=ip).count() >= 1:
         UserData.objects.get_or_create(ip=ip,
                                        browser=md["browser"],
                                        device=md["device"],
                                        os=md["os"],
                                        platform=md["platform"])
+        print("user get or create")
         user = True
-    except:
+    else:
         UserData.objects.create(ip=ip,
                                 browser=md["browser"],
                                 device=md["device"],
                                 os=md["os"],
                                 platform=md["platform"])
+        print("user create")
         user = False
-    print(md)
 
     # Cookie check
     cookie = request.COOKIES.get('was_here_before')
@@ -138,7 +140,7 @@ def index(request):
         return response
 
     elif cookie is None and not user:
+        context["was_here"] = "False"
         response = render(request, template, context)
         response.set_cookie('was_here_before', True, max_age=365 * 24 * 60 * 60)
-        context["was_here"] = "False"
-        return render(request, template, context)
+        return response
